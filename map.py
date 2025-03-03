@@ -67,6 +67,10 @@ class GameMap:
                         self.tiles[y][x].config(bg="blue", text=self.plalook)
 
 
+    #def player_change(self, px, py, ex, ey):
+    #    if px-ex > -1 and px-ex
+
+
     def attack(self, x, y):
         """Handles right-click events (currently does nothing)."""
         print(f"Left-clicked on ({x}, {y})")  # Placeholder for future functionality
