@@ -1,5 +1,12 @@
 import tkinter as tk
 import models as m
+import sys
+
+if getattr(sys, 'game_started', False):
+    sys.exit()
+
+sys.game_started = True
+
 
 class GameMap:
     def __init__(self, size):
@@ -107,15 +114,23 @@ class GameMap:
                     self.update_tile(x, y, "", "light green")
 
 
+    def on_close(self):
+        print("Closing game...")
+        self.root.destroy()
+        import sys
+        sys.exit()  # Ensure the program exits fully
+
+
     def setup(self):
         self.root = tk.Tk()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)  # Handle window close
         frame = tk.Frame(self.root)
         frame.pack()
 
         for y in range(self.size):
             for x in range(self.size):
                 btn = tk.Label(frame, text="", width=4, height=2, relief="ridge", borderwidth=2,
-                               font=("Arial", 12), bg="light green", highlightbackground="pink", highlightthickness=0.5)
+                            font=("Arial", 12), bg="light green", highlightbackground="pink", highlightthickness=0.5)
                 btn.grid(row=y, column=x)
 
                 btn.bind("<Button-1>", lambda e, x=x, y=y: self.attack(x, y))
