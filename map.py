@@ -1,38 +1,76 @@
 import tkinter as tk
 import player as p
+import entity as e
 
 class GameMap:
     def __init__(self, size):
         self.size = size
         self.gamemap = [[0 for _ in range(self.size)] for _ in range(self.size)]
         self.tiles = [[None for _ in range(self.size)] for _ in range(self.size)]
+        self.highlighted_tiles = []
+
         self.pla = p.player(1, 1)  # Player starting position
+        self.plalook = self.pla.look
+
         self.click_player = False
 
-    def left_click(self, x, y):
-        if self.gamemap[y][x] == "X":  # Selecting player
+        self.entity1 = e.entity(2, 2)
+
+
+    def move_player(self, x, y):
+        # Clear old highlighted tiles (if any)
+        for hx, hy in self.highlighted_tiles:
+            self.tiles[hy][hx].config(bg="light green")
+        self.highlighted_tiles = []
+
+        if self.gamemap[y][x] == "P":  # Selecting player
             self.tiles[y][x].config(bg="green")
             self.click_player = True
+
+            # Highlight movement range
+            reach = self.pla.model.reach
+
+            for dy in range(-reach, reach + 1):
+                for dx in range(-reach, reach + 1):
+                    nx, ny = x + dx, y + dy
+
+                    # Bounds check
+                    if 0 <= nx < self.size and 0 <= ny < self.size:
+                        # Skip highlighting the player tile itself
+                        if (nx, ny) != (x, y) and self.gamemap[ny][nx] == 0:
+                            self.tiles[ny][nx].config(bg="light blue")
+                            self.highlighted_tiles.append((nx, ny))
+
+        elif self.click_player:
+            if self.gamemap[y][x] == 0:  # Trying to move
+
+                vals = self.pla.move(x, y)
+
+                if vals["T"]:  # Valid move
+                    # Clear old position
+                    self.gamemap[vals["y"]][vals["x"]] = 0
+                    self.tiles[vals["y"]][vals["x"]].config(bg="light green", text="")
+
+                    # Clear movement highlights after moving
+                    for hx, hy in self.highlighted_tiles:
+                        self.tiles[hy][hx].config(bg="light green")
+                    self.highlighted_tiles = []
+
+                    # Update new position
+                    self.gamemap[y][x] = "P"
+                    self.tiles[y][x].config(bg="blue", text=self.plalook)
             
-        elif self.click_player:  # Trying to move
-            vals = self.pla.move(x, y)
-            if vals["T"]:  # Valid move
-                # Clear old position
-                self.gamemap[vals["y"]][vals["x"]] = 0
-                self.tiles[vals["y"]][vals["x"]].config(bg="light green", text="")
+            self.click_player = False
+            for y in range(self.size):
+                for x in range(self.size):
+                    if self.gamemap[y][x] == "P":
+                        self.tiles[y][x].config(bg="blue", text=self.plalook)
 
-                # Update new position
-                self.gamemap[y][x] = "X"
-                self.tiles[y][x].config(bg="blue", text="X")
-                
-                self.click_player = False
-            else:  # Invalid move
-                self.tiles[y][x].config(bg="red")  # Highlight invalid move
-                self.root.after(300, lambda: self.tiles[y][x].config(bg="light green"))  # Reset color
 
-    def right_click(self, x, y):
+    def attack(self, x, y):
         """Handles right-click events (currently does nothing)."""
-        print(f"Right-clicked on ({x}, {y})")  # Placeholder for future functionality
+        print(f"Left-clicked on ({x}, {y})")  # Placeholder for future functionality
+
 
     def setup(self):
         self.root = tk.Tk()
@@ -46,14 +84,16 @@ class GameMap:
                 btn.grid(row=y, column=x)
 
                 # Bind click events
-                btn.bind("<Button-1>", lambda e, x=x, y=y: self.left_click(x, y))
-                btn.bind("<Button-3>", lambda e, x=x, y=y: self.right_click(x, y))
+                btn.bind("<Button-1>", lambda e, x=x, y=y: self.attack(x, y))
+                btn.bind("<Button-3>", lambda e, x=x, y=y: self.move_player(x, y))
 
                 self.tiles[y][x] = btn
 
         # Place player at start position
-        print(self.pla.x, self.pla.y)
-        self.gamemap[self.pla.y][self.pla.x] = "X"
-        self.tiles[self.pla.y][self.pla.x].config(text="X", bg="blue")
+        self.gamemap[self.pla.y][self.pla.x] = "P"
+        self.tiles[self.pla.y][self.pla.x].config(text=self.plalook, bg="blue")
+
+        self.gamemap[self.entity1.y][self.entity1.x] = "E"
+        self.tiles[self.entity1.y][self.entity1.x].config(text=self.entity1.look, bg="red")
 
         self.root.mainloop()
