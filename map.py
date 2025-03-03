@@ -68,7 +68,8 @@ class GameMap:
 
 
     #def player_change(self, px, py, ex, ey):
-    #    if px-ex > -1 and px-ex
+    #    if px-ex >= -1 and px-ex <= 1 and py-ey >= -1 and py-ey <= 1:
+            
 
 
     def attack(self, x, y):
